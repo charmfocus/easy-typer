@@ -11,21 +11,21 @@
     "dist": "electron-builder",
     "dmg": "npx electron-installer-dmg ./target/木易跟打器-darwin-x64/木易跟打器.app 木易跟打器",
     "pack": "electron-builder --dir",
-    "package-mac": "npx electron-packager . 木易跟打器 --overwrite --platform=darwin --arch=x64 --out=target --icon=public/img/icons/logo-large.icns",
+    "package-mac": "npx electron-packager . 木易跟打器 --overwrite --platform=darwin --arch=x64 --out=target --icon=public/img/icons/logo-large.icns --prune --ignore=\"^/(src|tests|docs|scripts|target|\\.github|\\.agent_context|\\.multica|\\.claude|\\.git)(/|$)\" --ignore=\"^/public/(static|libs)(/|$)\" --ignore=\"(yarn\\.lock|pushUrl\\.py|\\.md)$\"",
     "start": "electron .",
     "webpack-main": "webpack"
   },
   "main": "electron/main.js",
   "dependencies": {
-    "@types/crypto-js": "^4.1.1",
-    "@types/uuid": "^9.0.1",
     "applescript": "^1.0.0",
     "crypto-js": "^4.1.1",
     "dayjs": "^1.11.7",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.1.1",
     "@types/echarts": "^4.9.4",
+    "@types/uuid": "^9.0.1",
     "@types/jest": "^24.0.19",
     "@types/node": "^14.14.33",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
@@ -85,7 +85,16 @@
     },
     "productName": "木易跟打器",
     "copyright": "Copyright © 2023 ${author} build(20230118)",
-    "asar": false
+    "asar": true,
+    "asarUnpack": [
+      "electron/bin/**",
+      "public/img/icons/logo-large.png"
+    ],
+    "files": [
+      "electron/**",
+      "public/img/icons/**",
+      "package.json"
+    ]
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
