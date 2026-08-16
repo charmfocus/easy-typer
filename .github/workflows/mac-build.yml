@@ -38,7 +38,8 @@ jobs:
         cache: 'yarn'
     - name: Install
       # 原生依赖 node-sass 仅构建网站时需要，打包只需 JS 产物，跳过原生编译以加速并避免工具链问题
-      run: yarn install --frozen-lockfile --ignore-scripts
+      # --ignore-engines：间接依赖 @achrinza/node-ipc 的 engines 声明过旧（最高 17），与 node 22 不兼容，实际不影响运行
+      run: yarn install --frozen-lockfile --ignore-scripts --ignore-engines
     - name: Package darwin-${{ matrix.arch }}
       run: yarn package-mac:${{ matrix.arch }}
     - name: 校验产物架构（file/lipo）
