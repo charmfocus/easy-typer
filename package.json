@@ -14,8 +14,8 @@
     "dmg:arm64": "npx electron-installer-dmg ./target/木易跟打器-darwin-arm64/木易跟打器.app 木易跟打器-arm64",
     "pack": "electron-builder --dir",
     "package-mac": "yarn package-mac:x64",
-    "package-mac:x64": "npx electron-packager . 木易跟打器 --overwrite --platform=darwin --arch=x64 --out=target --icon=public/img/icons/logo-large.icns --prune --ignore=\"^/(src|tests|docs|scripts|target|\\.github|\\.agent_context|\\.multica|\\.claude|\\.git)(/|$)\" --ignore=\"^/public/(static|libs)(/|$)\" --ignore=\"(yarn\\.lock|pushUrl\\.py|\\.md)$\"",
-    "package-mac:arm64": "npx electron-packager . 木易跟打器 --overwrite --platform=darwin --arch=arm64 --out=target --icon=public/img/icons/logo-large.icns --prune --ignore=\"^/(src|tests|docs|scripts|target|\\.github|\\.agent_context|\\.multica|\\.claude|\\.git)(/|$)\" --ignore=\"^/public/(static|libs)(/|$)\" --ignore=\"(yarn\\.lock|pushUrl\\.py|\\.md)$\"",
+    "package-mac:x64": "npx --no-install @electron/packager . 木易跟打器 --overwrite --platform=darwin --arch=x64 --out=target --icon=public/img/icons/logo-large.icns --prune --ignore=\"^/(src|tests|docs|scripts|target|\\.github|\\.agent_context|\\.multica|\\.claude|\\.git)(/|$)\" --ignore=\"^/public/(static|libs)(/|$)\" --ignore=\"(yarn\\.lock|pushUrl\\.py|\\.md)$\"",
+    "package-mac:arm64": "npx --no-install @electron/packager . 木易跟打器 --overwrite --platform=darwin --arch=arm64 --out=target --icon=public/img/icons/logo-large.icns --prune --ignore=\"^/(src|tests|docs|scripts|target|\\.github|\\.agent_context|\\.multica|\\.claude|\\.git)(/|$)\" --ignore=\"^/public/(static|libs)(/|$)\" --ignore=\"(yarn\\.lock|pushUrl\\.py|\\.md)$\"",
     "start": "electron .",
     "webpack-main": "webpack"
   },
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",
+    "@electron/packager": "^20.3.0",
     "@types/echarts": "^4.9.4",
     "@types/uuid": "^9.0.1",
     "@types/jest": "^24.0.19",

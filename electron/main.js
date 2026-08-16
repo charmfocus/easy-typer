@@ -28,7 +28,7 @@ mark('main-module-loaded')
 // do shell script "/usr/local/opt/cliclick c:." 
 
 // asar 打包时（electron-builder）可执行文件会被解包到 app.asar.unpacked，
-// 需重写路径；electron-packager 直拷目录时 __dirname 即为真实路径
+// 需重写路径；@electron/packager 直拷目录时 __dirname 即为真实路径
 const binDir = __dirname.includes('.asar') ? __dirname.replace('.asar', '.asar.unpacked') : __dirname
 const clickShell = `do shell script "${binDir}/bin/cliclick c:."`
 const retrivingScript = `tell application "QQ" to activate --QQ

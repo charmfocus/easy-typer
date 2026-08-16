@@ -33,7 +33,8 @@ jobs:
     - name: Setup node
       uses: actions/setup-node@v4
       with:
-        node-version: 16
+        # @electron/packager 20 要求 node >= 22.12
+        node-version: 22
         cache: 'yarn'
     - name: Install
       # 原生依赖 node-sass 仅构建网站时需要，打包只需 JS 产物，跳过原生编译以加速并避免工具链问题
