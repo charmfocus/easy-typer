@@ -22,6 +22,10 @@ const article = namespace('article')
 const racing = namespace('racing')
 const setting = namespace('setting')
 
+// 分词缓存挂在组件实例上（WeakMap 保持非响应式，
+// 避免在 words 计算属性内读写响应式字段造成循环触发）
+const wordCaches = new WeakMap<object, Map<number, Word>>()
+
 @Component({
   components: { Words }
 })
@@ -82,6 +86,7 @@ export default class Article extends Vue {
   get words (): Array<Word> {
     const length = this.content.length
     if (length === 0) {
+      wordCaches.delete(this)
       return []
     }
 
@@ -108,7 +113,34 @@ export default class Article extends Vue {
       }
     }
 
-    return words
+    return this.stabilize(words)
+  }
+
+  /**
+   * words 每次按键都会重新计算，直接返回会产生一批全新 Word 实例，
+   * 使所有 Words 子组件因 props 引用变化而整体重渲染。
+   * 这里按 id 缓存上一次的实例，字段未变化的分词复用旧对象，
+   * 让 Vue 跳过未变化子组件的渲染，降低跟打输入延迟。
+   */
+  stabilize (words: Array<Word>): Array<Word> {
+    const prev = wordCaches.get(this) || new Map<number, Word>()
+    const next = new Map<number, Word>()
+    const result = words.map(word => {
+      const cached = prev.get(word.id)
+      const stable = cached &&
+        cached.text === word.text &&
+        cached.type === word.type &&
+        cached.select === word.select &&
+        cached.autoSelect === word.autoSelect &&
+        // 词提编码来自最短路径图，实例稳定可直接比较引用；双方均为空数组（默认值）也视为相等
+        (cached.codings === word.codings || (cached.codings.length === 0 && word.codings.length === 0))
+        ? cached
+        : word
+      next.set(word.id, stable)
+      return stable
+    })
+    wordCaches.set(this, next)
+    return result
   }
 
   /**
