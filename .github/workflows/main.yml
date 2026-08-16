@@ -29,7 +29,9 @@ jobs:
           ${{ runner.os }}-yarn-
     - name: Install and Build
       run: |
-        yarn install --frozen-lockfile
+        # --ignore-engines：devDependency @electron/packager 声明 node >= 22.12，
+        # 但 deploy 只做网站构建不执行打包，跳过 engines 检查；build 链（node-sass 8/webpack4）仍需 node 16
+        yarn install --frozen-lockfile --ignore-engines
         yarn build
     - name: Deploy to Server
       uses: easingthemes/ssh-deploy@main
