@@ -1,0 +1,59 @@
+name: Build macOS packages
+
+# macOS 打包验证：分别产出 arm64 与 x64 两个 .app，并用 file/lipo 校验产物架构
+# 注意：macos-14 为 arm64 runner，macos-13 为 x64 runner，与 matrix.arch 一一对应
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  package-mac:
+    name: 打包 darwin-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            lipo_arch: arm64
+            runner: macos-14
+          - arch: x64
+            lipo_arch: x86_64
+            runner: macos-13
+    runs-on: ${{ matrix.runner }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+    - name: Setup node
+      uses: actions/setup-node@v4
+      with:
+        # @electron/packager 20 要求 node >= 22.12
+        node-version: 22
+        cache: 'yarn'
+    - name: Install
+      # 原生依赖 node-sass 仅构建网站时需要，打包只需 JS 产物，跳过原生编译以加速并避免工具链问题
+      run: yarn install --frozen-lockfile --ignore-scripts
+    - name: Package darwin-${{ matrix.arch }}
+      run: yarn package-mac:${{ matrix.arch }}
+    - name: 校验产物架构（file/lipo）
+      run: |
+        APP_BIN="target/木易跟打器-darwin-${{ matrix.arch }}/木易跟打器.app/Contents/MacOS/木易跟打器"
+        file "$APP_BIN"
+        lipo -info "$APP_BIN"
+        # 断言产物确实包含目标架构，否则该 job 失败（lipo 对 x64 的架构名为 x86_64）
+        lipo -info "$APP_BIN" | grep -q -w "${{ matrix.lipo_arch }}" || {
+          echo "::error::产物未包含 ${{ matrix.lipo_arch }} 架构"
+          exit 1
+        }
+    - name: 上传产物
+      uses: actions/upload-artifact@v4
+      with:
+        name: 木易跟打器-darwin-${{ matrix.arch }}
+        path: target/木易跟打器-darwin-${{ matrix.arch }}
+        retention-days: 14
