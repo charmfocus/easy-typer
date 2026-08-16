@@ -27,6 +27,8 @@ jobs:
             lipo_arch: x86_64
             runner: macos-14
     runs-on: ${{ matrix.runner }}
+    # 兜底：正常一轮约 5 分钟，超时防 runner 环境异常时无限烧配额
+    timeout-minutes: 15
     steps:
     - name: Checkout
       uses: actions/checkout@v4
