@@ -6,6 +6,16 @@ const path = require('path')
 
 const applescript = require('applescript')
 
+// 启动性能埋点：设置环境变量 EASY_TYPER_TIMING=1 时输出各阶段耗时（毫秒）
+const timingEnabled = !!process.env.EASY_TYPER_TIMING
+const t0 = Date.now()
+const mark = (name) => {
+  if (timingEnabled) {
+    console.log(`[timing] ${name}: +${Date.now() - t0}ms`)
+  }
+}
+mark('main-module-loaded')
+
 // Very basic AppleScript command. Returns the song name of each
 // currently selected track in iTunes as an 'Array' of 'String's.
 // do shell script "/usr/local/opt/cliclick c:." 
@@ -74,6 +84,10 @@ const createWindow = () => {
   // mainWindow.loadURL('http://127.0.0.1:8080')
   mainWindow.loadURL('https://typer.owenyang.top')
   // mainWindow.loadURL('https://owenyang0.github.io/easy-typer/')
+  mark('loadURL-called')
+
+  mainWindow.webContents.on('dom-ready', () => mark('dom-ready'))
+  mainWindow.webContents.on('did-finish-load', () => mark('did-finish-load'))
 
   // 在此示例中，将仅创建具有 `about:blank` url 的窗口。
   // 其他 url 将被阻止。
@@ -99,7 +113,9 @@ const createWindow = () => {
   // mainWindow.webContents.openDevTools()
 
   mainWindow.on('ready-to-show', function () {
+    mark('ready-to-show')
     mainWindow.show()
+    mark('window-shown')
     mainWindow.webContents.send('version', app.getVersion())
   })
 
@@ -114,7 +130,9 @@ function hasWindow() {
 // 和创建浏览器窗口的时候调用
 // 部分 API 在 ready 事件触发后才能使用。
 app.whenReady().then(() => {
+  mark('app-ready')
   createWindow()
+  mark('window-created')
 
   app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
