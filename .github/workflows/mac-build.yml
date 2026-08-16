@@ -1,7 +1,9 @@
 name: Build macOS packages
 
 # macOS 打包验证：分别产出 arm64 与 x64 两个 .app，并用 file/lipo 校验产物架构
-# 注意：macos-14 为 arm64 runner，macos-13 为 x64 runner，与 matrix.arch 一一对应
+# 注意：统一使用 macos-14（arm64）runner。打包链为纯 JS 组装，产物架构由下载的
+# electron zip 决定，可在 arm64 runner 上交叉产出 x64 包（本机 Apple Silicon 已验证）；
+# macos-13（x64）runner 排队过久，不再使用
 on:
   push:
     branches:
@@ -23,7 +25,7 @@ jobs:
             runner: macos-14
           - arch: x64
             lipo_arch: x86_64
-            runner: macos-13
+            runner: macos-14
     runs-on: ${{ matrix.runner }}
     steps:
     - name: Checkout
