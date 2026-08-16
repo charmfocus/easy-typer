@@ -4,7 +4,14 @@
 const { app, globalShortcut, ipcMain, BrowserWindow, clipboard, Notification } = require('electron')
 const path = require('path')
 
-const applescript = require('applescript')
+// applescript 仅在发送成绩/F4 载文时才会用到，懒加载以缩短主进程启动路径
+let applescript = null
+const getApplescript = () => {
+  if (!applescript) {
+    applescript = require('applescript')
+  }
+  return applescript
+}
 
 // 启动性能埋点：设置环境变量 EASY_TYPER_TIMING=1 时输出各阶段耗时（毫秒）
 const timingEnabled = !!process.env.EASY_TYPER_TIMING
@@ -48,6 +55,20 @@ function showNotification (body = '', title = '木易跟打器') {
 }
 const isProduction = app.isPackaged
 let mainWindow
+
+// 发送成绩：ipcMain 监听放在模块级，避免窗口重建时重复注册导致 applescript 被执行多次
+ipcMain.on('set-grade', (event, msg) => {
+  console.log(msg)
+  getApplescript().execString(sendingScript, (err) => {
+    if (err) {
+      // Something went wrong!
+      console.error('sendingScript err', err)
+      showNotification(err.message || 'Fail', '发送成绩失败')
+    }
+    app.focus({ steal: true })
+  })
+})
+
 const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -67,16 +88,10 @@ const createWindow = () => {
     app.dock.setIcon(path.join(__dirname, '../public/img/icons/logo-large.png'))
   }
 
-  ipcMain.on('set-grade', (event, msg) => {
-    console.log(msg)
-    applescript.execString(sendingScript, (err) => {
-      if (err) {
-        // Something went wrong!
-        console.error('sendingScript err', err)
-        showNotification(err.message || 'Fail', '发送成绩失败')
-      }
-      app.focus({ steal: true })
-    })
+  // 窗口关闭后清理引用（重建窗口时同样生效）
+  mainWindow.on('closed', _ => {
+    console.log('closed')
+    mainWindow = null
   })
 
   // 加载 index.html
@@ -146,7 +161,7 @@ app.whenReady().then(() => {
   const ret = globalShortcut.register('F4', () => {
     console.log('F4 is pressed')
 
-    applescript.execString(retrivingScript, (err) => {
+    getApplescript().execString(retrivingScript, (err) => {
       app.focus({ steal: true })
 
       const errmsg = '暂时无法获取QQ赛文！请参考『使用帮助-快速开始』完成初始设置：在『系统偏好设置-安全性与隐私-辅助功能』中，允许『木易跟打器』控制电脑；2.按下F4快捷键直接载文，即刻开始你的跟打之旅。'
@@ -192,11 +207,6 @@ app.whenReady().then(() => {
 
   // 检查快捷键是否注册成功
   console.log('is F4 registered: ' + globalShortcut.isRegistered('F4'))
-
-  mainWindow.on('closed', _ => {
-    console.log('closed')
-    mainWindow = null
-  })
 })
 
 // 除了 macOS 外，当所有窗口都被关闭的时候退出程序。 There, it's common
@@ -204,7 +214,8 @@ app.whenReady().then(() => {
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   console.log('window-all-closed')
-  ipcMain.removeAllListeners()
+  // set-grade 监听已在模块级注册且与窗口无关，这里不再统一移除，
+  // 否则 macOS 关闭全部窗口后重建窗口时发送成绩会失效
 
   if (process.platform !== 'darwin') app.quit()
 })
